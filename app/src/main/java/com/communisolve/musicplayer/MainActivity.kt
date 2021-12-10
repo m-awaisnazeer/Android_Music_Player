@@ -1,8 +1,12 @@
 package com.communisolve.musicplayer
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -13,11 +17,12 @@ import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.communisolve.musicplayer.fragments.AlbumFragment
 import com.communisolve.musicplayer.fragments.SongsFragment
+import com.communisolve.musicplayer.model.MusicFiles
 import com.google.android.material.tabs.TabLayout
 
 class MainActivity : AppCompatActivity() {
     private val REQUEST_CODE: Int = 111
-
+    private lateinit var musicFiles: ArrayList<MusicFiles>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -36,7 +41,8 @@ class MainActivity : AppCompatActivity() {
                 this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE
             )
         } else {
-            Toast.makeText(this, "permission granted", Toast.LENGTH_SHORT).show()
+            musicFiles = getAllAudios(this)
+            Toast.makeText(this, "permission granted ${musicFiles.size}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -48,7 +54,8 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "permission granted", Toast.LENGTH_SHORT).show()
+                musicFiles = getAllAudios(this)
+                Toast.makeText(this, "permission granted ${musicFiles.size}", Toast.LENGTH_SHORT).show()
             } else {
                 ActivityCompat.requestPermissions(
                     this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE
@@ -56,6 +63,38 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    fun getAllAudios(context: Context): ArrayList<MusicFiles> {
+        val tempAudiosList: ArrayList<MusicFiles> = ArrayList()
+        val uri: Uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val projection: Array<String> = arrayOf(
+            MediaStore.Audio.Media.ALBUM,
+            MediaStore.Audio.Media.TITLE,
+            MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.DATA, // for path
+            MediaStore.Audio.Media.ARTIST
+        )
+
+        val cursor: Cursor = context.contentResolver.query(
+            uri, projection, null, null, null
+        )!!
+
+        while (cursor.moveToNext()) {
+            val album = cursor.getString(0)
+            val title = cursor.getString(1)
+            val duration = cursor.getString(2)
+            val path = cursor.getString(3)
+            val artist = cursor.getString(4)
+
+            val musicFiles = MusicFiles(
+                path, title, artist, album, duration
+            )
+            tempAudiosList.add(musicFiles)
+        }
+        cursor.close()
+        return tempAudiosList
+    }
+
 
     private fun initViewPager() {
         val mViewPager: ViewPager = findViewById(R.id.viewPager)
@@ -88,6 +127,4 @@ class ViewPagerAdapter(
     override fun getItem(position: Int): Fragment {
         return fragments.get(position)
     }
-
-
 }
