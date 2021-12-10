@@ -21,13 +21,14 @@ import com.communisolve.musicplayer.model.MusicFiles
 import com.google.android.material.tabs.TabLayout
 
 class MainActivity : AppCompatActivity() {
+    companion object{
+        lateinit var musicFiles: ArrayList<MusicFiles>
+    }
     private val REQUEST_CODE: Int = 111
-    private lateinit var musicFiles: ArrayList<MusicFiles>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         permissions()
-        initViewPager()
     }
 
     private fun permissions() {
@@ -42,7 +43,7 @@ class MainActivity : AppCompatActivity() {
             )
         } else {
             musicFiles = getAllAudios(this)
-            Toast.makeText(this, "permission granted ${musicFiles.size}", Toast.LENGTH_SHORT).show()
+            initViewPager()
         }
     }
 
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == REQUEST_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 musicFiles = getAllAudios(this)
-                Toast.makeText(this, "permission granted ${musicFiles.size}", Toast.LENGTH_SHORT).show()
+                initViewPager()
             } else {
                 ActivityCompat.requestPermissions(
                     this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE
