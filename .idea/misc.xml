@@ -6,7 +6,7 @@
         <entry key="app/src/main/res/drawable/gredient_bg.xml" value="0.20277777777777778" />
         <entry key="app/src/main/res/drawable/main_bg.xml" value="0.20277777777777778" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1015625" />
-        <entry key="app/src/main/res/layout/activity_player.xml" value="0.21822916666666667" />
+        <entry key="app/src/main/res/layout/activity_player.xml" value="0.165" />
         <entry key="app/src/main/res/layout/fragment_songs.xml" value="0.23229166666666667" />
         <entry key="app/src/main/res/layout/music_items.xml" value="0.23229166666666667" />
         <entry key="app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.2484375" />

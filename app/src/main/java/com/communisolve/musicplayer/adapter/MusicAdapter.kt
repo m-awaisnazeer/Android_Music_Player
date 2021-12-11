@@ -39,7 +39,7 @@ class MusicAdapter(
         }
         holder.itemView.setOnClickListener {
             it.context.apply {
-                startActivity(Intent(this, PlayerActivity::class.java))
+                startActivity(Intent(this, PlayerActivity::class.java).putExtra("position",position))
             }
         }
     }
