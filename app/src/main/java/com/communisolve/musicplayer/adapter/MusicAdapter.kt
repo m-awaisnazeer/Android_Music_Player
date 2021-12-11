@@ -1,5 +1,6 @@
 package com.communisolve.musicplayer.adapter
 
+import android.content.Intent
 import android.media.MediaMetadataRetriever
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.communisolve.musicplayer.PlayerActivity
 import com.communisolve.musicplayer.R
 import com.communisolve.musicplayer.model.MusicFiles
 
@@ -34,7 +36,11 @@ class MusicAdapter(
             Glide.with(holder.itemView.context)
                 .load(holder.itemView.context.getDrawable(R.mipmap.ic_launcher_round))
                 .into(holder.music_img)
-
+        }
+        holder.itemView.setOnClickListener {
+            it.context.apply {
+                startActivity(Intent(this, PlayerActivity::class.java))
+            }
         }
     }
 
