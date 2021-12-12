@@ -1,18 +1,23 @@
 package com.communisolve.musicplayer
 
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.view.LayoutInflater
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.communisolve.musicplayer.databinding.ActivityPlayerBinding
 import com.communisolve.musicplayer.model.MusicFiles
 
-class PlayerActivity : AppCompatActivity() {
+class PlayerActivity : AppCompatActivity(),MediaPlayer.OnCompletionListener, ActionPlaying, ServiceConnection {
     companion object {
         var listOfSongs: ArrayList<MusicFiles> = ArrayList()
         lateinit var uri: Uri
@@ -25,6 +30,8 @@ class PlayerActivity : AppCompatActivity() {
     lateinit var playPauseThread: Thread
     lateinit var prevThread: Thread
     lateinit var nextThread: Thread
+    var musicService: MusicService? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +40,7 @@ class PlayerActivity : AppCompatActivity() {
         getIntentMethod()
         binding.songName.text = listOfSongs[position].title
         binding.songArtist.text = listOfSongs[position].artist
-
+        mediaPlayer?.setOnCompletionListener(this)
         binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (mediaPlayer != null && fromUser) {
@@ -109,10 +116,17 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        val intent: Intent = Intent(this, MusicService::class.java)
+        bindService(intent, this, BIND_AUTO_CREATE)
         playPauseThreadBtn()
         nextThreadBtn()
         prevThreadBtn()
         super.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        unbindService(this)
     }
 
     private fun prevThreadBtn() {
@@ -128,7 +142,7 @@ class PlayerActivity : AppCompatActivity() {
         prevThread.start()
     }
 
-    private fun prevBtnClicked() {
+    override fun prevBtnClicked() {
         if (mediaPlayer?.isPlaying == true) {
             mediaPlayer?.stop()
             mediaPlayer?.release()
@@ -152,7 +166,8 @@ class PlayerActivity : AppCompatActivity() {
                     handler.postDelayed(this, 1000)
                 }
             })
-            binding.pausePlay.setImageResource(R.drawable.ic_baseline_pause_24)
+            mediaPlayer?.setOnCompletionListener(this)
+            binding.pausePlay.setBackgroundResource(R.drawable.ic_baseline_pause_24)
             mediaPlayer?.start()
         } else {
             mediaPlayer?.stop()
@@ -176,7 +191,8 @@ class PlayerActivity : AppCompatActivity() {
                     handler.postDelayed(this, 1000)
                 }
             })
-            binding.pausePlay.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+            mediaPlayer?.setOnCompletionListener(this)
+            binding.pausePlay.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24)
         }
     }
 
@@ -192,7 +208,7 @@ class PlayerActivity : AppCompatActivity() {
         nextThread.start()
     }
 
-    private fun nextBtnClicked() {
+    override fun nextBtnClicked() {
         if (mediaPlayer?.isPlaying == true) {
             mediaPlayer?.stop()
             mediaPlayer?.release()
@@ -211,7 +227,8 @@ class PlayerActivity : AppCompatActivity() {
                     handler.postDelayed(this, 1000)
                 }
             })
-            binding.pausePlay.setImageResource(R.drawable.ic_baseline_pause_24)
+            mediaPlayer?.setOnCompletionListener(this)
+            binding.pausePlay.setBackgroundResource(R.drawable.ic_baseline_pause_24)
             mediaPlayer?.start()
         } else {
             mediaPlayer?.stop()
@@ -231,7 +248,8 @@ class PlayerActivity : AppCompatActivity() {
                     handler.postDelayed(this, 1000)
                 }
             })
-            binding.pausePlay.setImageResource(R.drawable.ic_baseline_play_arrow_24)
+            mediaPlayer?.setOnCompletionListener(this)
+            binding.pausePlay.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24)
         }
     }
 
@@ -247,14 +265,14 @@ class PlayerActivity : AppCompatActivity() {
         playPauseThread.start()
     }
 
-    private fun playPauseBtnClicked() {
+    override fun playPauseBtnClicked() {
         if (mediaPlayer?.isPlaying == true) {
             binding.pausePlay.setImageResource(R.drawable.ic_baseline_play_arrow_24)
             mediaPlayer?.pause()
             binding.seekBar.max = mediaPlayer?.duration!! / 1000
             this.runOnUiThread(object : Runnable {
                 override fun run() {
-                    if (mediaPlayer != null) {
+                     if (mediaPlayer != null) {
                         var mCurrentPosition = mediaPlayer?.currentPosition!! / 1000
                         binding.seekBar.progress = mCurrentPosition
                     }
@@ -275,6 +293,25 @@ class PlayerActivity : AppCompatActivity() {
                     handler.postDelayed(this, 1000)
                 }
             })
+        }
+    }
+
+    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+        val myBinder: MusicService.MyBinder = service as MusicService.MyBinder
+        musicService = myBinder.getMusicService()
+        Toast.makeText(this, "Connected $musicService", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onServiceDisconnected(name: ComponentName?) {
+        musicService = null
+    }
+
+    override fun onCompletion(mp: MediaPlayer?) {
+        nextBtnClicked()
+        if (mediaPlayer!=null){
+            mediaPlayer = MediaPlayer.create(applicationContext, uri)
+            mediaPlayer?.start()
+            mediaPlayer?.setOnCompletionListener(this)
         }
     }
 }
